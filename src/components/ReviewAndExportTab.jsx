@@ -167,8 +167,8 @@ export default function ReviewAndExportTab({
               key={i}
               onClick={() => onGoToStep(card.step)}
               className={`p-4 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2 ${card.ok
-                  ? "bg-emerald-50/60 border-emerald-200 hover:border-emerald-400"
-                  : "bg-amber-50/70 border-amber-200 hover:border-amber-400"
+                ? "bg-emerald-50/60 border-emerald-200 hover:border-emerald-400"
+                : "bg-amber-50/70 border-amber-200 hover:border-amber-400"
                 }`}
             >
               <div>
@@ -207,10 +207,10 @@ export default function ReviewAndExportTab({
                 <FileSpreadsheet className="w-4 h-4" />
                 Xuất Tệp Excel Chuẩn Mẫu Gốc (03_DVSN_XA.xlsx)
               </span>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400/15 border border-amber-300/30 text-amber-200 text-[11px] font-semibold">
+              {/* <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-400/15 border border-amber-300/30 text-amber-200 text-[11px] font-semibold">
                 <Award className="w-3 h-3 text-amber-300" />
                 Trần Quốc Liêm – TT DVTH xã Trường Long
-              </span>
+              </span> */}
             </div>
             <h3 className="text-sm sm:text-base font-bold break-all">
               Tải về tệp <span className="font-mono text-emerald-300">{fileName}</span>

@@ -609,10 +609,17 @@ export default function HomePage() {
   const handleExportExcel = async (opts = {}) => {
     try {
       setIsExporting(true);
-      const blob = await exportToOriginalExcel(sheetState, {
-        replacePrefix: opts.replacePrefix,
-        unitCode: unitMeta.unitCode,
-      });
+      const blob = await exportToOriginalExcel(
+        {
+          ...sheetState,
+          D1: allEvaluated.D1,
+          D2: allEvaluated.D2,
+        },
+        {
+          replacePrefix: opts.replacePrefix,
+          unitCode: unitMeta.unitCode,
+        }
+      );
       const fileName = `${unitMeta.unitCode || "DVTH_TRUONGLONG"}_K2526_${unitMeta.version || "v1"
         }_${unitMeta.sendDate || "06112026"}.xlsx`;
 

@@ -285,15 +285,18 @@ export async function exportToOriginalExcel(state, options = {}) {
   sheet10Xml = updateSheetXml(sheet10Xml, c3Map, new Set(["H", "I", "J"]));
   zip.file("xl/worksheets/sheet10.xml", sheet10Xml);
 
-  // 9. Sheet 11: 9. D1_NhanLuc (Cột trắng: A, B, C, E, F, G, H, I, K; Cột số: E, F, K)
+  // 9. Sheet 11: 9. D1_NhanLuc (Gồm cả cột D vì file gốc 03_DVSN_XA.xlsx bị khuyết công thức ở cột D)
   if (state.D1 && state.D1.length > 0) {
     const d1Map = new Map();
     state.D1.forEach((r, idx) => {
       const rNum = r.rowNum || idx + 3;
+      const dVal =
+        r.D !== "" && r.D !== null && r.D !== undefined ? r.D : 1904;
       d1Map.set(rNum, {
         A: r.A,
         B: applyUnitCodePrefix(r.B, prefix),
         C: r.C ?? "",
+        D: dVal,
         E: r.E ?? "",
         F: r.F ?? "",
         G: r.G ?? "",
@@ -303,11 +306,15 @@ export async function exportToOriginalExcel(state, options = {}) {
       });
     });
     let sheet11Xml = await zip.file("xl/worksheets/sheet11.xml").async("string");
-    sheet11Xml = updateSheetXml(sheet11Xml, d1Map, new Set(["E", "F", "K"]));
+    sheet11Xml = updateSheetXml(
+      sheet11Xml,
+      d1Map,
+      new Set(["D", "E", "F", "K"])
+    );
     zip.file("xl/worksheets/sheet11.xml", sheet11Xml);
   }
 
-  // 10. Sheet 12: 10. D2_PhuongAn (Cột trắng: A, B, D, E, F, G, H, I; Cột số: B, D, E, G)
+  // 10. Sheet 12: 10. D2_PhuongAn (Gồm cả C, J, K, L vì file gốc 03_DVSN_XA.xlsx không có công thức sẵn ở C, J, K, L)
   if (state.D2 && state.D2.length > 0) {
     const d2Map = new Map();
     state.D2.forEach((r, idx) => {
@@ -315,16 +322,24 @@ export async function exportToOriginalExcel(state, options = {}) {
       d2Map.set(rNum, {
         A: applyUnitCodePrefix(r.A, prefix),
         B: r.B ?? "",
+        C: r.C ?? "",
         D: r.D ?? "",
         E: r.E ?? "",
         F: r.F ?? "",
         G: r.G ?? "",
         H: r.H ?? "",
         I: r.I ?? "",
+        J: r.J ?? "",
+        K: r.K ?? "",
+        L: r.L ?? "",
       });
     });
     let sheet12Xml = await zip.file("xl/worksheets/sheet12.xml").async("string");
-    sheet12Xml = updateSheetXml(sheet12Xml, d2Map, new Set(["B", "D", "E", "G"]));
+    sheet12Xml = updateSheetXml(
+      sheet12Xml,
+      d2Map,
+      new Set(["B", "C", "D", "E", "G", "J", "K", "L"])
+    );
     zip.file("xl/worksheets/sheet12.xml", sheet12Xml);
   }
 
