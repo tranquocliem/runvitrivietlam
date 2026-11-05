@@ -63,6 +63,35 @@ function belongsToUnit(code, unitCode) {
   return s.includes(`-A1-${unitCode}-`) || s.includes(`-${unitCode}-`);
 }
 
+function ensureUniqueD1Codes(d1Rows = [], defaultPrefix = "DVTH_TRUONGLONG") {
+  const used = new Set();
+  let seq = 1;
+  const cleanPrefix = (defaultPrefix || "DVTH_TRUONGLONG").trim().toUpperCase();
+
+  return d1Rows.map((row, idx) => {
+    const rawA = String(row?.A || "").trim();
+    if (rawA && !used.has(rawA)) {
+      used.add(rawA);
+      return { ...row, rowNum: idx + 3 };
+    }
+    const prefixPart = rawA.includes(".")
+      ? rawA.slice(0, rawA.lastIndexOf("."))
+      : cleanPrefix;
+    let candidate = `${prefixPart}.${String(seq).padStart(3, "0")}`;
+    while (used.has(candidate)) {
+      seq++;
+      candidate = `${prefixPart}.${String(seq).padStart(3, "0")}`;
+    }
+    used.add(candidate);
+    seq++;
+    return {
+      ...row,
+      A: candidate,
+      rowNum: idx + 3,
+    };
+  });
+}
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("UNIT"); // "UNIT" | "A1_A2_B1" | "B2" | "C1_C2_C3" | "D1_D2" | "EXPORT"
   const [selectedUnit, setSelectedUnit] = useState("DVTH"); // Mặc định Trung tâm Dịch vụ tổng hợp xã Trường Long
@@ -111,7 +140,11 @@ export default function HomePage() {
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed.sheetState && parsed.sheetState.A1) {
-          setSheetState(parsed.sheetState);
+          const prefix = parsed.unitMeta?.unitCode || "DVTH_TRUONGLONG";
+          setSheetState({
+            ...parsed.sheetState,
+            D1: ensureUniqueD1Codes(parsed.sheetState.D1 || [], prefix),
+          });
         }
         if (parsed.unitMeta) setUnitMeta(parsed.unitMeta);
         if (parsed.selectedUnit) setSelectedUnit(parsed.selectedUnit);
@@ -262,7 +295,10 @@ export default function HomePage() {
       const c3Filtered = c3Raw.map((r) =>
         evaluateC3Row(r, c1Filtered, b1Filtered, b2Filtered)
       );
-      const d1Filtered = fullUnitRows.D1.filter((r) => r.B === selectedVtvl);
+      const d1Filtered = evaluateD1Rows(
+        sheetState.D1.filter((r) => r.B === selectedVtvl),
+        c1Filtered
+      );
       const d2Filtered = evaluateD2Rows(
         sheetState.D2.filter((r) => r.A === selectedVtvl),
         c3Filtered
@@ -297,7 +333,10 @@ export default function HomePage() {
       const c3Filtered = c3Raw.map((r) =>
         evaluateC3Row(r, c1Filtered, b1Filtered, b2Filtered)
       );
-      const d1Filtered = fullUnitRows.D1.filter((r) => vtvlSet.has(r.B));
+      const d1Filtered = evaluateD1Rows(
+        sheetState.D1.filter((r) => vtvlSet.has(r.B)),
+        c1Filtered
+      );
       const d2Filtered = evaluateD2Rows(
         sheetState.D2.filter((r) => vtvlSet.has(r.A)),
         c3Filtered
@@ -317,7 +356,15 @@ export default function HomePage() {
     }
 
     return fullUnitRows;
-  }, [fullUnitRows, scopeMode, selectedVtvl, selectedJobCodes, sheetState.C3, sheetState.D2]);
+  }, [
+    fullUnitRows,
+    scopeMode,
+    selectedVtvl,
+    selectedJobCodes,
+    sheetState.C3,
+    sheetState.D1,
+    sheetState.D2,
+  ]);
 
   // Các hàm cập nhật dữ liệu từng biểu
   const handleUpdateA1 = (rowNum, code, changes) => {
@@ -482,13 +529,18 @@ export default function HomePage() {
         (r) => !isVtvlInActiveScope(r.A, a2ByCode, targetUnitCode)
       );
 
-      const genD1 = generateD1FromC3(scopedC3, scopedC1Eval, unitMeta.unitCode);
+      const genD1 = generateD1FromC3(
+        scopedC3,
+        scopedC1Eval,
+        unitMeta.unitCode,
+        otherD1
+      );
       const genD2 = generateD2FromC3(scopedC3);
 
-      const mergedD1 = [...otherD1, ...genD1].map((r, i) => ({
-        ...r,
-        rowNum: i + 3,
-      }));
+      const mergedD1 = ensureUniqueD1Codes(
+        [...otherD1, ...genD1],
+        unitMeta.unitCode
+      );
       const mergedD2 = [...otherD2, ...genD2].map((r, i) => ({
         ...r,
         rowNum: i + 3,
@@ -570,12 +622,17 @@ export default function HomePage() {
         (r) => !isVtvlInActiveScope(r.A, a2ByCode, selectedUnit)
       );
 
-      const genD1 = generateD1FromC3(scopedC3, scopedC1Eval, unitMeta.unitCode);
+      const genD1 = generateD1FromC3(
+        scopedC3,
+        scopedC1Eval,
+        unitMeta.unitCode,
+        otherD1
+      );
       const genD2 = generateD2FromC3(scopedC3);
 
       return {
         ...prev,
-        D1: [...otherD1, ...genD1].map((r, i) => ({ ...r, rowNum: i + 3 })),
+        D1: ensureUniqueD1Codes([...otherD1, ...genD1], unitMeta.unitCode),
         D2: [...otherD2, ...genD2].map((r, i) => ({ ...r, rowNum: i + 3 })),
       };
     });

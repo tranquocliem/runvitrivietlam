@@ -154,12 +154,23 @@ export function suggestC3Row(c3EvaluatedRow) {
 
 /**
  * Tạo nhanh danh sách nhân sự D1 (chốt tại 30/9/2026) từ kết quả C3 của đơn vị
+ * Đảm bảo Mã nguồn lực (Cột A) luôn duy nhất, không bao giờ trùng với các dòng D1 của VTVL khác đã tạo trước đó
  */
-export function generateD1FromC3(c3RowsForUnit, c1RowsForUnit, unitCode = "DVSN") {
+export function generateD1FromC3(
+  c3RowsForUnit,
+  c1RowsForUnit,
+  unitCode = "DVSN",
+  existingD1Rows = []
+) {
   const c1Map = {};
   for (const r of c1RowsForUnit) {
     c1Map[r.A] = r;
   }
+  const usedCodes = new Set(
+    (existingD1Rows || [])
+      .map((r) => String(r?.A || "").trim())
+      .filter(Boolean)
+  );
   const d1List = [];
   let seq = 1;
   const cleanCode = (unitCode || "DVSN").trim().toUpperCase();
@@ -171,10 +182,16 @@ export function generateD1FromC3(c3RowsForUnit, c1RowsForUnit, unitCode = "DVSN"
     const loai = c1?.C || "Viên chức";
 
     for (let i = 0; i < count; i++) {
-      const stt = String(seq).padStart(3, "0");
+      let candidateCode = `${cleanCode}.${String(seq).padStart(3, "0")}`;
+      while (usedCodes.has(candidateCode)) {
+        seq++;
+        candidateCode = `${cleanCode}.${String(seq).padStart(3, "0")}`;
+      }
+      usedCodes.add(candidateCode);
+
       d1List.push({
         rowNum: seq + 2,
-        A: `${cleanCode}.${stt}`,
+        A: candidateCode,
         B: c3.A,
         C: `${loai} - ${c1?.B || c3.A}`,
         D: quyGio,
