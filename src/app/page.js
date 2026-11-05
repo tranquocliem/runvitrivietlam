@@ -423,14 +423,15 @@ export default function HomePage() {
       const nextB1 = prev.B1.map((r) => {
         if (!isJobInActiveScope(r.A, a2ByCode, targetUnitCode)) return r;
         const suggested = suggestB1Metrics(a2ByCode[r.A]);
+        const isGenericH =
+          !r.H ||
+          String(r.H).startsWith("Hồ sơ/sổ/hệ thống nghiệp vụ của đơn vị");
         return {
           ...r,
           C: r.C !== "" && r.C !== undefined ? r.C : suggested.C,
           D: r.D !== "" && r.D !== undefined ? r.D : suggested.D,
           E: r.E !== "" && r.E !== undefined ? r.E : suggested.E,
-          H:
-            r.H ||
-            "Hồ sơ/sổ/hệ thống nghiệp vụ của đơn vị; thống kê thực tế kỳ 01/10/2025–30/9/2026; người phụ trách xác nhận",
+          H: isGenericH ? suggested.H : r.H,
           I: r.I || suggested.I,
           J: r.J || suggested.J,
           K: r.K || "01/10/2025–30/9/2026",

@@ -108,6 +108,9 @@ export default function TasksAndWorkloadTab({
       if (b1.R !== "ĐẠT") {
         const a2 = a2ByCode[b1.A];
         const suggested = suggestB1Metrics(a2);
+        const isGenericH =
+          !b1.H ||
+          String(b1.H).startsWith("Hồ sơ/sổ/hệ thống nghiệp vụ của đơn vị");
         updates.push({
           rowNum: b1.rowNum,
           A: b1.A,
@@ -115,9 +118,7 @@ export default function TasksAndWorkloadTab({
             C: b1.C !== "" && b1.C !== undefined ? b1.C : suggested.C,
             D: b1.D !== "" && b1.D !== undefined ? b1.D : suggested.D,
             E: b1.E !== "" && b1.E !== undefined ? b1.E : suggested.E,
-            H:
-              b1.H ||
-              "Hồ sơ/sổ/hệ thống nghiệp vụ của đơn vị; thống kê thực tế kỳ 01/10/2025–30/9/2026; người phụ trách xác nhận",
+            H: isGenericH ? suggested.H : b1.H,
             I: b1.I || suggested.I,
             J: b1.J || suggested.J,
             K: b1.K || "01/10/2025–30/9/2026",
@@ -512,7 +513,9 @@ export default function TasksAndWorkloadTab({
                         {a1.B}
                       </h3>
                       <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
-                        <strong>Căn cứ (Cột D - A1):</strong> {a1.D}
+                        <strong>Căn cứ (Cột D - A1):</strong> {a1.D} •{" "}
+                        <strong>Sản phẩm đầu ra của nhiệm vụ:</strong>{" "}
+                        {jobs.map((j) => j.a2.E).join("; ")}
                       </p>
                     </div>
                   </div>
@@ -547,6 +550,12 @@ export default function TasksAndWorkloadTab({
                     {jobs.map(({ a2, b1 }) => {
                       const isDat = b1.R === "ĐẠT";
                       const vtvlName = c1NameMap[a2.C] || a2.C;
+                      const detail = explainJobInDetail(a2);
+                      const isGenericH =
+                        !b1.H ||
+                        String(b1.H).startsWith(
+                          "Hồ sơ/sổ/hệ thống nghiệp vụ của đơn vị"
+                        );
                       const isIsolatedSingleJob =
                         scopeMode === "JOB" &&
                         selectedJobCodes.length === 1 &&
@@ -638,49 +647,53 @@ export default function TasksAndWorkloadTab({
 
                           {/* Khung nhập liệu B1 cho công việc này */}
                           <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50 border border-slate-200/90 space-y-3">
-                            {/* Hộp giải thích dễ hiểu & công thức tính trực tiếp của công việc này */}
-                            {(() => {
-                              const detail = explainJobInDetail(a2);
-                              return (
-                                <div className="p-2.5 sm:p-3 rounded-lg bg-blue-50/80 border border-blue-200/80 text-xs text-slate-700 flex flex-col lg:flex-row lg:items-center justify-between gap-2">
-                                  <div className="leading-relaxed space-y-0.5">
-                                    <div>
-                                      <span className="font-bold text-blue-900">
-                                        💡 Đang nhập cái gì & Cách đếm:
-                                      </span>{" "}
-                                      {detail.howToCountC}{" "}
-                                      <span className="font-semibold text-emerald-800">
-                                        ({detail.rangeC})
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <span className="font-semibold text-slate-800">
-                                        • Thời gian 1 {a2.F} (Cột D):
-                                      </span>{" "}
-                                      {detail.howToEstimateD}{" "}
-                                      <span className="font-semibold text-blue-800">
-                                        ({detail.rangeD})
-                                      </span>
-                                    </div>
-                                  </div>
-                                  <div className="shrink-0 px-2.5 py-1.5 rounded-lg bg-white border border-blue-200 font-mono text-[11px] text-blue-950">
-                                    <strong>Cách tính giờ (G):</strong> ({Number(b1.C) || 0}{" "}
-                                    {a2.F} × {Number(b1.D) || 0} phút ÷ 60) +{" "}
-                                    {Number(b1.E) || 0}h BS ={" "}
-                                    <strong className="text-blue-700">
-                                      {typeof b1.G === "number"
-                                        ? `${b1.G.toFixed(1)} giờ/năm`
-                                        : "0 giờ"}
-                                    </strong>{" "}
-                                    (~
-                                    {typeof b1.G === "number"
-                                      ? (b1.G / 1904).toFixed(2)
-                                      : "0.00"}{" "}
-                                    người)
-                                  </div>
+                            {/* Hộp giải thích dễ hiểu & công thức tính trực tiếp của đúng công việc này */}
+                            <div className="p-2.5 sm:p-3 rounded-lg bg-blue-50/80 border border-blue-200/80 text-xs text-slate-700 flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+                              <div className="leading-relaxed space-y-1">
+                                <div>
+                                  <span className="font-bold text-blue-900">
+                                    💡 Đang nhập cái gì & Cách đếm ({a2.F}):
+                                  </span>{" "}
+                                  {detail.howToCountC}{" "}
+                                  <span className="font-semibold text-emerald-800">
+                                    ({detail.rangeC})
+                                  </span>
                                 </div>
-                              );
-                            })()}
+                                <div>
+                                  <span className="font-semibold text-slate-800">
+                                    • Thời gian 1 {a2.F} (Cột D):
+                                  </span>{" "}
+                                  {detail.howToEstimateD}{" "}
+                                  <span className="font-semibold text-blue-800">
+                                    ({detail.rangeD})
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="font-semibold text-slate-800">
+                                    • Giờ bổ sung/năm (Cột E):
+                                  </span>{" "}
+                                  {detail.howToEstimateE}{" "}
+                                  <span className="font-semibold text-indigo-800">
+                                    (Gợi ý chuẩn: {detail.suggested.E} giờ/năm)
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="shrink-0 px-2.5 py-1.5 rounded-lg bg-white border border-blue-200 font-mono text-[11px] text-blue-950">
+                                <strong>Cách tính giờ (G):</strong> ({Number(b1.C) || 0}{" "}
+                                {a2.F} × {Number(b1.D) || 0} phút ÷ 60) +{" "}
+                                {Number(b1.E) || 0}h BS ={" "}
+                                <strong className="text-blue-700">
+                                  {typeof b1.G === "number"
+                                    ? `${b1.G.toFixed(1)} giờ/năm`
+                                    : "0 giờ"}
+                                </strong>{" "}
+                                (~
+                                {typeof b1.G === "number"
+                                  ? (b1.G / 1904).toFixed(2)
+                                  : "0.00"}{" "}
+                                người)
+                              </div>
+                            </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                               {/* Cột C: Số SP/năm */}
@@ -698,7 +711,7 @@ export default function TasksAndWorkloadTab({
                                       C: e.target.value === "" ? "" : Number(e.target.value),
                                     })
                                   }
-                                  placeholder={`Số ${a2.F || "SP"}/năm`}
+                                  placeholder={`Gợi ý: ${detail.suggested.C} ${a2.F || "SP"}/năm`}
                                   className="w-full px-3 py-1.5 text-sm font-semibold border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
                                 />
                               </div>
@@ -729,7 +742,7 @@ export default function TasksAndWorkloadTab({
                                         D: e.target.value === "" ? "" : Number(e.target.value),
                                       })
                                     }
-                                    placeholder="Phút / 1 SP"
+                                    placeholder={`Gợi ý: ${detail.suggested.D} phút`}
                                     className="w-full px-3 py-1.5 text-sm font-semibold border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
                                   />
                                   {b1.D > 0 && (
@@ -755,7 +768,7 @@ export default function TasksAndWorkloadTab({
                                       E: e.target.value === "" ? "" : Number(e.target.value),
                                     })
                                   }
-                                  placeholder="Giờ họp, rà soát..."
+                                  placeholder={`Gợi ý: ${detail.suggested.E} giờ`}
                                   className="w-full px-3 py-1.5 text-sm border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
                                 />
                               </div>
@@ -804,16 +817,31 @@ export default function TasksAndWorkloadTab({
                             {/* Nguồn số lượng (H) & Nguồn thời gian (I) */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                               <div>
-                                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                                  Nguồn số lượng sản phẩm (Cột H - B1)
-                                </label>
+                                <div className="flex items-center justify-between mb-1">
+                                  <label className="block text-xs font-semibold text-slate-700">
+                                    Nguồn số lượng sản phẩm (Cột H - B1)
+                                  </label>
+                                  {isGenericH && detail.sourceH && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        onUpdateB1(b1.rowNum, b1.A, {
+                                          H: detail.sourceH,
+                                        })
+                                      }
+                                      className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 cursor-pointer"
+                                    >
+                                      + Điền tên sổ/hồ sơ của việc này
+                                    </button>
+                                  )}
+                                </div>
                                 <input
                                   type="text"
                                   value={b1.H || ""}
                                   onChange={(e) =>
                                     onUpdateB1(b1.rowNum, b1.A, { H: e.target.value })
                                   }
-                                  placeholder="Sổ đăng ký văn bản, hệ thống quản lý, báo cáo tổng kết..."
+                                  placeholder={detail.sourceH}
                                   className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg bg-white"
                                 />
                               </div>
@@ -826,11 +854,12 @@ export default function TasksAndWorkloadTab({
                                   <button
                                     type="button"
                                     onClick={() => {
-                                      const suggested = suggestB1Metrics(a2);
+                                      const suggested = detail.suggested;
                                       onUpdateB1(b1.rowNum, b1.A, {
                                         C: b1.C !== "" && b1.C !== undefined ? b1.C : suggested.C,
                                         D: b1.D !== "" && b1.D !== undefined ? b1.D : suggested.D,
                                         E: b1.E !== "" && b1.E !== undefined ? b1.E : suggested.E,
+                                        H: isGenericH ? suggested.H : b1.H,
                                         I: b1.I || suggested.I,
                                       });
                                     }}
@@ -845,7 +874,7 @@ export default function TasksAndWorkloadTab({
                                   onChange={(e) =>
                                     onUpdateB1(b1.rowNum, b1.A, { I: e.target.value })
                                   }
-                                  placeholder="Nhập văn bản định mức hoặc phiếu khảo sát thời gian thực tế, người xác nhận..."
+                                  placeholder={detail.sourceI || QUICK_TIME_SOURCES[0]}
                                   className={`w-full px-3 py-1.5 text-xs border rounded-lg bg-white ${
                                     !b1.I
                                       ? "border-amber-400 bg-amber-50/30"
@@ -854,18 +883,33 @@ export default function TasksAndWorkloadTab({
                                 />
                                 {!b1.I && (
                                   <div className="flex flex-wrap gap-1 mt-1">
-                                    {QUICK_TIME_SOURCES.slice(0, 2).map((src, i) => (
-                                      <button
-                                        key={i}
-                                        type="button"
-                                        onClick={() =>
-                                          onUpdateB1(b1.rowNum, b1.A, { I: src })
-                                        }
-                                        className="text-[10px] px-2 py-0.5 rounded bg-slate-200/80 hover:bg-blue-100 text-slate-700 hover:text-blue-800 transition cursor-pointer"
-                                      >
-                                        Chọn mẫu {i + 1}: &ldquo;{src.slice(0, 48)}...&rdquo;
-                                      </button>
-                                    ))}
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        onUpdateB1(b1.rowNum, b1.A, {
+                                          I: detail.sourceI || QUICK_TIME_SOURCES[0],
+                                          ...(isGenericH && detail.sourceH
+                                            ? { H: detail.sourceH }
+                                            : {}),
+                                        })
+                                      }
+                                      className="text-[10px] px-2 py-0.5 rounded bg-emerald-100/90 hover:bg-emerald-200 text-emerald-900 font-semibold transition cursor-pointer"
+                                    >
+                                      Chọn chuẩn của việc này: &ldquo;
+                                      {(detail.sourceI || QUICK_TIME_SOURCES[0]).slice(0, 52)}...&rdquo;
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        onUpdateB1(b1.rowNum, b1.A, {
+                                          I: QUICK_TIME_SOURCES[1],
+                                        })
+                                      }
+                                      className="text-[10px] px-2 py-0.5 rounded bg-slate-200/80 hover:bg-blue-100 text-slate-700 hover:text-blue-800 transition cursor-pointer"
+                                    >
+                                      Chọn mẫu chung: &ldquo;
+                                      {QUICK_TIME_SOURCES[1].slice(0, 44)}...&rdquo;
+                                    </button>
                                   </div>
                                 )}
                               </div>

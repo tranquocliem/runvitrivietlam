@@ -549,13 +549,16 @@ export default function UserGuideTab({
                                 <button
                                   type="button"
                                   onClick={() => {
+                                    const isGenericH =
+                                      !b1.H ||
+                                      String(b1.H).startsWith(
+                                        "Hồ sơ/sổ/hệ thống nghiệp vụ của đơn vị"
+                                      );
                                     onUpdateB1(b1.rowNum, b1.A, {
                                       C: detail.suggested.C,
                                       D: detail.suggested.D,
                                       E: detail.suggested.E,
-                                      H:
-                                        b1.H ||
-                                        "Hồ sơ/sổ/hệ thống nghiệp vụ của đơn vị; thống kê thực tế kỳ 01/10/2025–30/9/2026; người phụ trách xác nhận",
+                                      H: isGenericH ? detail.suggested.H : b1.H,
                                       I: detail.suggested.I,
                                       J: detail.suggested.J,
                                     });
@@ -579,6 +582,8 @@ export default function UserGuideTab({
                                 <br />• <strong>Đơn vị đếm (Cột C):</strong> Đếm theo{" "}
                                 <strong className="text-blue-700">{a2.F}</strong>
                                 <br />• <strong>Yêu cầu:</strong> {a2.G}
+                                <br />• <strong>Sổ/Hồ sơ đếm (Cột H):</strong>{" "}
+                                <span className="text-slate-700">{detail.sourceH}</span>
                               </p>
                             </div>
 
